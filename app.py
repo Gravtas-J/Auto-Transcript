@@ -1,123 +1,116 @@
 import streamlit as st
-from moviepy.editor import VideoFileClip
-from transformers import pipeline
-from io import BytesIO
-import logging
 import torch
-from huggingface_hub import snapshot_download
+from transformers import pipeline
+from transformers.utils import is_flash_attn_2_available
+from io import BytesIO
+from moviepy.editor import VideoFileClip
+import tempfile
 
-# Set up logging
-logging.basicConfig(level=logging.DEBUG)
-logging.getLogger("transformers").setLevel(logging.DEBUG)
-
-# Cache the model locally
-@st.cache_resource
-def download_model():
-    model_path = snapshot_download("openai/whisper-tiny")
-    return model_path
-
-# Initialize the Whisper model
-@st.cache_resource
-def load_transcription_pipeline():
-    model_path = download_model()
-    logging.debug("Loading transcription pipeline from local cache...")
-    device = 0 if torch.cuda.is_available() else -1
-    return pipeline(
+# Function to transcribe audio file
+def transcribe_audio(audio_path):
+    pipe = pipeline(
         "automatic-speech-recognition",
-        model=model_path,
-        device=device  # Use GPU if available, else CPU
+        model="openai/whisper-large-v3",  # select checkpoint from https://huggingface.co/openai/whisper-large-v3#model-details
+        torch_dtype=torch.float16,
+        device="cuda:0",  # or mps for Mac devices
+        model_kwargs={"attn_implementation": "flash_attention_2"} if is_flash_attn_2_available() else {"attn_implementation": "sdpa"},
     )
 
-transcription_pipeline = load_transcription_pipeline()
-logging.debug("Transcription pipeline loaded successfully.")
+    # Transcribe audio
+    outputs = pipe(
+        audio_path,
+        chunk_length_s=30,
+        batch_size=24,
+        return_timestamps=True,
+    )
+    
+    return outputs
 
 # Function to extract audio from video
 def extract_audio_from_video(video_file):
-    try:
-        logging.debug("Extracting audio from video...")
-        st.write("Extracting audio from video...")
-        video = VideoFileClip(video_file.name)
-        audio = video.audio
-        audio_buffer = BytesIO()
-        audio.write_audiofile(audio_buffer, format='mp3')
-        audio_buffer.seek(0)
-        video.close()
-        logging.debug("Audio extracted successfully.")
-        st.write("Audio extracted successfully.")
-        return audio_buffer
-    except Exception as e:
-        error_message = f"Error extracting audio from video: {e}"
-        logging.error(error_message)
-        st.error(error_message)
-        return None
+    # Save video file to a temporary location
+    with tempfile.NamedTemporaryFile(delete=False) as temp_video_file:
+        temp_video_file.write(video_file.read())
+        temp_video_file_path = temp_video_file.name
+    
+    # Extract audio using moviepy
+    with VideoFileClip(temp_video_file_path) as video:
+        with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as temp_audio_file:
+            video.audio.write_audiofile(temp_audio_file.name)
+            return temp_audio_file.name
 
-# Function to handle audio file directly
-def handle_audio_file(audio_file):
-    try:
-        logging.debug("Handling audio file...")
-        st.write("Handling audio file...")
-        audio_buffer = BytesIO()
-        audio_buffer.write(audio_file.getvalue())
-        audio_buffer.seek(0)
-        logging.debug("Audio file handled successfully.")
-        st.write("Audio file handled successfully.")
-        return audio_buffer
-    except Exception as e:
-        error_message = f"Error handling audio file: {e}"
-        logging.error(error_message)
-        st.error(error_message)
-        return None
+# Function to format transcription to SRT
+def format_srt(transcription):
+    srt_content = []
+    for idx, chunk in enumerate(transcription["chunks"]):
+        start_time = chunk["timestamp"][0]
+        end_time = chunk["timestamp"][1]
+        text = chunk["text"]
+        srt_content.append(f"{idx+1}")
+        srt_content.append(f"{format_time(start_time)} --> {format_time(end_time)}")
+        srt_content.append(f"{text}\n")
+    return "\n".join(srt_content)
 
-# Function to transcribe audio and save to text file
-def transcribe_audio(audio_buffer):
-    try:
-        logging.debug("Transcribing audio...")
-        st.write("Transcribing audio...")
-        audio_buffer.seek(0)
-        result = transcription_pipeline(audio_buffer)
-        text = result['text']
-        text_buffer = BytesIO()
-        text_buffer.write(text.encode('utf-8'))
-        text_buffer.seek(0)
-        logging.debug("Transcription completed successfully.")
-        st.write("Transcription completed successfully.")
-        return text_buffer, text
-    except Exception as e:
-        error_message = f"Error transcribing audio: {e}"
-        logging.error(error_message)
-        st.error(error_message)
-        return None, None
+# Function to format time for SRT
+def format_time(seconds):
+    millisec = int((seconds - int(seconds)) * 1000)
+    seconds = int(seconds)
+    hours = seconds // 3600
+    minutes = (seconds % 3600) // 60
+    seconds = seconds % 60
+    return f"{hours:02}:{minutes:02}:{seconds:02},{millisec:03}"
 
-st.title('Media to Transcript Converter')
+# Streamlit app
+def main():
+    st.title("Audio/Video Transcription with Whisper")
 
-# File uploader widget
-uploaded_file = st.file_uploader("Choose a media file", type=["mp4", "avi", "mov", "mkv", "mp3", "wav", "aac"])
+    # Sidebar for file upload and transcription button
+    st.sidebar.header("Upload Audio or Video File")
+    uploaded_file = st.sidebar.file_uploader("Choose an audio or video file...", type=["mp3", "wav", "m4a", "mp4", "mkv", "avi"])
 
-if uploaded_file is not None:
-    logging.debug(f"Uploaded file: {uploaded_file.name}, type: {uploaded_file.type}")
-    file_type = uploaded_file.type.split('/')[0]
-    if file_type == 'video':
-        audio_buffer = extract_audio_from_video(uploaded_file)
-    elif file_type == 'audio':
-        audio_buffer = handle_audio_file(uploaded_file)
-    else:
-        st.error("Unsupported file type. Please upload a video or audio file.")
-        audio_buffer = None
+    # Initialize session state for transcription and SRT data
+    if "transcription_text" not in st.session_state:
+        st.session_state.transcription_text = ""
+        st.session_state.transcription_srt = ""
 
-    if audio_buffer:
-        st.audio(audio_buffer)
-        text_buffer, text = transcribe_audio(audio_buffer)
-        if text_buffer and text:
-            st.write("Transcript:", text)
-            st.download_button(
-                label="Download Transcript as TXT",
-                data=text_buffer,
-                file_name="transcript.txt",
-                mime="text/plain"
-            )
-        else:
-            logging.debug("No transcription text available.")
-    else:
-        logging.debug("No audio buffer available.")
-else:
-    logging.debug("No file uploaded.")
+    if uploaded_file is not None:
+        if st.sidebar.button("Transcribe"):
+            with st.spinner("Transcribing..."):
+                # Check if the file is an audio or video file
+                file_type = uploaded_file.type.split('/')[0]
+                
+                if file_type == 'video':
+                    # Extract audio from video file
+                    audio_path = extract_audio_from_video(uploaded_file)
+                else:
+                    # Save audio file to a temporary location
+                    with tempfile.NamedTemporaryFile(delete=False) as temp_audio_file:
+                        temp_audio_file.write(uploaded_file.read())
+                        audio_path = temp_audio_file.name
+                
+                # Transcribe audio
+                transcription = transcribe_audio(audio_path)
+                st.session_state.transcription_text = transcription['text']
+                st.session_state.transcription_srt = format_srt(transcription)
+
+            st.success("Transcription complete!")
+    st.text_area("Transcription", st.session_state.transcription_text, height=300)
+
+    # Display download buttons if transcription data is available
+    if st.session_state.transcription_text and st.session_state.transcription_srt:
+        st.sidebar.download_button(
+            label="Download Transcription",
+            data=BytesIO(st.session_state.transcription_text.encode()),
+            file_name="transcription.txt",
+            mime="text/plain"
+        )
+
+        st.sidebar.download_button(
+            label="Download SRT File",
+            data=BytesIO(st.session_state.transcription_srt.encode()),
+            file_name="transcription.srt",
+            mime="text/plain"
+        )
+
+if __name__ == "__main__":
+    main()
