@@ -10,7 +10,7 @@ This is a Streamlit-based application for transcribing audio and video files usi
 - **SRT Formatting:** Generates SRT files with timestamped transcriptions for use in subtitles.
 
 
-![Transcription with Whisper Screenshot](.images\Screenshot.png)
+![Transcription with Whisper Screenshot](.images/Screenshot.png)
 
 ## Installation
 
