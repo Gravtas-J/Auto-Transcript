@@ -1,4 +1,9 @@
 streamlit
 moviepy
 transformers
-
+torch
+huggingface_hub
+requests
+numpy
+soundfile
+pydub

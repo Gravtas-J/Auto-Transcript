@@ -1,10 +1,10 @@
-import streamlit as st
 import torch
 from transformers import pipeline
 from transformers.utils import is_flash_attn_2_available
 from io import BytesIO
 from moviepy.editor import VideoFileClip
 import tempfile
+import streamlit as st
 
 # Function to transcribe audio file
 def transcribe_audio(audio_path):
@@ -94,7 +94,7 @@ def main():
                 st.session_state.transcription_srt = format_srt(transcription)
 
             st.success("Transcription complete!")
-    st.text_area("Transcription", st.session_state.transcription_text, height=300)
+            st.text_area("Transcription", st.session_state.transcription_text, height=300)
 
     # Display download buttons if transcription data is available
     if st.session_state.transcription_text and st.session_state.transcription_srt:
