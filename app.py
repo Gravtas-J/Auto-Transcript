@@ -43,8 +43,8 @@ def extract_audio_from_video(video_file):
 def format_srt(transcription):
     srt_content = []
     for idx, chunk in enumerate(transcription["chunks"]):
-        start_time = chunk["timestamp"][0]
-        end_time = chunk["timestamp"][1]
+        start_time = chunk["timestamp"][0] if chunk["timestamp"] and chunk["timestamp"][0] is not None else 0
+        end_time = chunk["timestamp"][1] if chunk["timestamp"] and chunk["timestamp"][1] is not None else 0
         text = chunk["text"]
         srt_content.append(f"{idx+1}")
         srt_content.append(f"{format_time(start_time)} --> {format_time(end_time)}")
