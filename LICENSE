@@ -1,21 +1,38 @@
-MIT License
+### Limited Use License Agreement for Auto Transcriber
 
-Copyright (c) 2024 Jesse Dale
+This Limited Use License Agreement ("Agreement") is made and entered into by and between Jesse Dale ("Developer") and the user ("User") of the Auto Transcriber software ("Software").
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+**1. Grant of License**
+The Developer hereby grants the User a limited, non-exclusive, non-transferable license to use the Software solely for personal, non-commercial purposes.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+**2. Restrictions on Use**
+The User agrees not to:
+- Use the Software for any commercial purposes without the express written permission of the Developer.
+- Modify, distribute, or create derivative works based on the Software.
+- Reverse engineer, decompile, or disassemble the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+**3. Commercial Use**
+If the User wishes to use the Software for commercial purposes, they must obtain a commercial license from the Developer. For inquiries regarding commercial licensing, please contact the Developer at jesse@general-ai.com.au.
+
+**4. Termination**
+This Agreement is effective until terminated. The Developer may terminate this Agreement at any time if the User breaches any terms of this Agreement. Upon termination, the User must cease all use of the Software and destroy all copies in their possession.
+
+**5. Disclaimer of Warranties**
+The Software is provided "as is" without warranty of any kind, either express or implied, including but not limited to the implied warranties of merchantability and fitness for a particular purpose.
+
+**6. Limitation of Liability**
+In no event shall the Developer be liable for any damages whatsoever arising out of the use of or inability to use the Software, even if the Developer has been advised of the possibility of such damages.
+
+**7. Governing Law**
+This Agreement shall be governed by and construed in accordance with the laws of Australia.
+
+**8. Entire Agreement**
+This Agreement constitutes the entire agreement between the parties concerning the subject matter hereof and supersedes all prior agreements and understandings.
+
+**9. Contact Information**
+For any questions regarding this Agreement or to request a commercial license, please contact the Developer at:
+
+Jesse Dale  
+jesse@general-ai.com.au  
+
+By using the Software, the User acknowledges that they have read, understood, and agree to be bound by the terms and conditions of this Agreement.
